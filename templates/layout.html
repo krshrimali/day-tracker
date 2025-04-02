@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Work Logger</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">Work Logger</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Log Work</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/summary">Summary</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/bar_chart_page">Bar Chart</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/pie_chart_page">Pie Chart</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/schedule">Schedule</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/schedule_summary">Schedule Summary</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                {% if session.username %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout ({{ session.username }})</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+    <div class="container-fluid mt-5">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-success">
+                {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

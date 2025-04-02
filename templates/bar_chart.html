@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>Bar Chart</h1>
+    </div>
+    <div class="card-body">
+        <canvas id="timeChart" width="800" height="400"></canvas>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('{{ url_for("chart_data") }}')
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('timeChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.dates,
+                        datasets: [{
+                            label: 'Hours Spent',
+                            data: data.times,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+    });
+</script>
+{% endblock %}

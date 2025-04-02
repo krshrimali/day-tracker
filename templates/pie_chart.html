@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>Pie Chart</h1>
+    </div>
+    <div class="card-body">
+        <form id="pie-chart-form" class="form-inline mb-4">
+            <div class="form-group mr-2">
+                <label for="pie_chart_group_by" class="mr-2">Group by:</label>
+                <select id="pie_chart_group_by" name="pie_chart_group_by" class="form-control">
+                    <option value="category">Category</option>
+                    <option value="ticket_link">Ticket Link</option>
+                </select>
+            </div>
+            <div class="form-group mr-2">
+                <label for="last_days" class="mr-2">Last:</label>
+                <input type="number" id="last_days" name="last_days" class="form-control" placeholder="Days">
+            </div>
+            <div class="form-group mr-2">
+                <label for="start_date" class="mr-2">Or Start Date:</label>
+                <input type="date" id="start_date" name="start_date" class="form-control">
+            </div>
+            <div class="form-group mr-2">
+                <label for="end_date" class="mr-2">End Date:</label>
+                <input type="date" id="end_date" name="end_date" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Show</button>
+        </form>
+        <canvas id="pieChart" width="800" height="400"></canvas>
+    </div>
+</div>
+
+<script>
+    const pieChartForm = document.getElementById('pie-chart-form');
+
+    pieChartForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        updatePieChart();
+    });
+
+    let pieChart;  // Chart instance variable
+
+    function updatePieChart() {
+        const groupBy = document.getElementById('pie_chart_group_by').value;
+        const lastDays = document.getElementById('last_days').value;
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+
+        let url = `{{ url_for("pie_chart_data") }}?group_by=${groupBy}`;
+        if (lastDays) {
+            url += `&last_days=${lastDays}`;
+        } else if (startDate && endDate) {
+            url += `&start_date=${startDate}&end_date=${endDate}`;
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                renderPieChart(data.groups, data.times);
+            });
+    }
+
+    function renderPieChart(labels, data) {
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+
+        if (pieChart) {
+            pieChart.destroy();  // Destroy existing chart instance if it exists
+        }
+
+        pieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)', 
+                        'rgba(54, 162, 235, 0.6)', 
+                        'rgba(255, 206, 86, 0.6)', 
+                        'rgba(75, 192, 192, 0.6)', 
+                        'rgba(153, 102, 255, 0.6)', 
+                        'rgba(255, 159, 64, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePieChart();
+    });
+</script>
+{% endblock %}

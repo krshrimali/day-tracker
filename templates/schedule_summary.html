@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>Schedule Summary</h1>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('schedule_summary') }}" class="form-inline mb-3">
+            <div class="form-group mr-2">
+                <label for="date" class="mr-2">Select Date:</label>
+                <input type="date" id="date" name="date" class="form-control" value="{{ date }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Show Summary</button>
+        </form>
+        
+        {% if activities %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Activity</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Link</th>
+                    <th>Category</th>
+                    <th>Time Spent (Hours)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr>
+                    <td>{{ activity['activity'] }}</td>
+                    <td>{{ activity['start_time'] }}</td>
+                    <td>{{ activity['end_time'] }}</td>
+                    <td>{{ activity['link'] }}</td>
+                    <td>{{ activity['category'] }}</td>
+                    <td>{{ '%.2f' | format(activity['time_spent']) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No activities found for this date.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

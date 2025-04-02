@@ -1,0 +1,269 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>Day Schedule</h1>
+    </div>
+    <div class="card-body">
+        <!-- Form to select the date -->
+        <form method="get" action="{{ url_for('schedule') }}" class="form-inline mb-3">
+            <div class="form-group mr-2">
+                <label for="date" class="mr-2">Select Date:</label>
+                <input type="date" id="date" name="date" class="form-control" value="{{ date }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Load Schedule</button>
+        </form>
+
+        <!-- Form to modify the schedule -->
+        <form method="post" action="{{ url_for('schedule') }}">
+            <input type="hidden" name="date" value="{{ date }}">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Activity</th>
+                        <th>Link</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="schedule-body">
+                    {% if schedule %}
+                        {% for entry in schedule %}
+                            <tr class="{% if entry['moved_to_log_work'] %}moved-row{% endif %}">
+                                <input type="hidden" name="moved_to_log_work" value="{{ entry['moved_to_log_work'] }}">
+                                <td><input type="time" name="start_time" class="form-control start-time" value="{{ entry['start_time'] }}"></td>
+                                <td><input type="time" name="end_time" class="form-control end-time" value="{{ entry['end_time'] }}"></td>
+                                <td><textarea name="activity" class="form-control auto-expand">{{ entry['activity'] }}</textarea></td>
+                                <td><input type="text" name="link" class="form-control" value="{{ entry['link'] }}"></td>
+                                <td>
+                                    <select name="category" class="form-control">
+                                        <option value="Meetings" {% if entry['category'] == 'Meetings' %}selected{% endif %}>Meetings</option>
+                                        <option value="Work" {% if entry['category'] == 'Work' %}selected{% endif %}>Work</option>
+                                        <option value="Learning" {% if entry['category'] == 'Learning' %}selected{% endif %}>Learning</option>
+                                        <option value="Miscellaneous" {% if entry['category'] == 'Miscellaneous' %}selected{% endif %}>Miscellaneous</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-secondary btn-sm move-up">↑</button>
+                                    <button type="button" class="btn btn-secondary btn-sm move-down">↓</button>
+                                    <button type="button" class="btn btn-success btn-sm add-row">Add</button>
+                                    <button type="button" class="btn btn-danger btn-sm delete-row">Delete</button>
+                                    {% if not entry['moved_to_log_work'] %}
+                                    <button type="button" class="btn btn-info btn-sm move-to-log-work" data-id="{{ entry['id'] }}">Move to Log Work</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for hour in range(6, 24) %}
+                            <tr data-id="new">
+                                <input type="hidden" name="moved_to_log_work" value="0">
+                                <td><input type="time" name="start_time" class="form-control start-time" value="{{ '%02d:00' % hour }}"></td>
+                                <td><input type="time" name="end_time" class="form-control end-time" value="{{ '%02d:00' % (hour + 1 if hour < 23 else 0) }}"></td>
+                                <td><textarea name="activity" class="form-control auto-expand"></textarea></td>
+                                <td><input type="text" name="link" class="form-control"></td>
+                                <td>
+                                    <select name="category" class="form-control">
+                                        <option value="Meetings">Meetings</option>
+                                        <option value="Work">Work</option>
+                                        <option value="Learning">Learning</option>
+                                        <option value="Miscellaneous">Miscellaneous</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-secondary btn-sm move-up">↑</button>
+                                    <button type="button" class="btn btn-secondary btn-sm move-down">↓</button>
+                                    <button type="button" class="btn btn-success btn-sm add-row">Add</button>
+                                    <button type="button" class="btn btn-danger btn-sm delete-row">Delete</button>
+                                    <button type="button" class="btn btn-info btn-sm move-to-log-work" data-id="new">Move to Log Work</button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+            <button type="button" id="add-row" class="btn btn-secondary">Add Row to Bottom</button>
+            <button type="submit" name="save_schedule" class="btn btn-primary">Save Schedule</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .moved-row {
+        background-color: #dfe7fd;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function autoExpandTextarea(element) {
+            element.style.height = 'auto';
+            element.style.height = element.scrollHeight + 'px';
+        }
+
+        function updateNextStartTime(currentEndTimeElement) {
+            var currentEndTime = currentEndTimeElement.value;
+            var currentRow = currentEndTimeElement.closest('tr');
+            var nextRow = currentRow.nextElementSibling;
+
+            if (nextRow) {
+                var nextStartTimeElement = nextRow.querySelector('.start-time');
+                if (nextStartTimeElement) {
+                    nextStartTimeElement.value = currentEndTime;
+                }
+            }
+        }
+
+        function initializeRowEvents(row) {
+            row.querySelector('.auto-expand').addEventListener('input', function () {
+                autoExpandTextarea(this);
+            });
+
+            row.querySelector('.end-time').addEventListener('change', function () {
+                updateNextStartTime(this);
+            });
+
+            row.querySelector('.delete-row').addEventListener('click', function () {
+                var row = this.closest('tr');
+                row.remove();
+            });
+
+            row.querySelector('.move-up').addEventListener('click', function () {
+                var row = this.closest('tr');
+                var prevRow = row.previousElementSibling;
+
+                if (prevRow) {
+                    row.parentNode.insertBefore(row, prevRow);
+                }
+            });
+
+            row.querySelector('.move-down').addEventListener('click', function () {
+                var row = this.closest('tr');
+                var nextRow = row.nextElementSibling;
+
+                if (nextRow) {
+                    row.parentNode.insertBefore(nextRow, row);
+                }
+            });
+
+            row.querySelector('.add-row').addEventListener('click', function () {
+                var row = this.closest('tr');
+                var newRow = document.createElement('tr');
+                var prevEndTime = row.querySelector('.end-time').value;
+
+                newRow.innerHTML = `
+                    <input type="hidden" name="moved_to_log_work" value="0">
+                    <td><input type="time" name="start_time" value="${prevEndTime}" class="form-control start-time"></td>
+                    <td><input type="time" name="end_time" class="form-control end-time"></td>
+                    <td><textarea name="activity" class="form-control auto-expand"></textarea></td>
+                    <td><input type="text" name="link" class="form-control"></td>
+                    <td>
+                        <select name="category" class="form-control">
+                            <option value="Meetings">Meetings</option>
+                            <option value="Work">Work</option>
+                            <option value="Learning">Learning</option>
+                            <option value="Miscellaneous">Miscellaneous</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-secondary btn-sm move-up">↑</button>
+                        <button type="button" class="btn btn-secondary btn-sm move-down">↓</button>
+                        <button type="button" class="btn btn-success btn-sm add-row">Add</button>
+                        <button type="button" class="btn btn-danger btn-sm delete-row">Delete</button>
+                        <button type="button" class="btn btn-info btn-sm move-to-log-work" data-id="new">Move to Log Work</button>
+                    </td>
+                `;
+
+                row.parentNode.insertBefore(newRow, row.nextSibling);
+                initializeRowEvents(newRow);
+            });
+
+            row.querySelector('.move-to-log-work').addEventListener('click', function () {
+                var row = this.closest('tr');
+                var startTime = row.querySelector('.start-time').value;
+                var endTime = row.querySelector('.end-time').value;
+
+                var task = row.querySelector('textarea[name="activity"]').value;
+                var link = row.querySelector('input[name="link"]').value;
+                var category = row.querySelector('select[name="category"]').value;
+
+                var startTimeParts = startTime.split(':').map(Number);
+                var endTimeParts = endTime.split(':').map(Number);
+                var startDateTime = new Date();
+                var endDateTime = new Date();
+
+                startDateTime.setHours(startTimeParts[0], startTimeParts[1]);
+                endDateTime.setHours(endTimeParts[0], endTimeParts[1]);
+
+                var timeSpent = (endDateTime - startDateTime) / 3600000; // Convert milliseconds to hours
+
+                var logWorkData = {
+                    "task": task,
+                    "ticket_link": link,
+                    "time_spent": timeSpent,
+                    "comments": "",
+                    "category": category
+                };
+
+                var entryId = this.getAttribute('data-id');
+
+                // Mark the row as moved
+                row.classList.add('moved-row');
+                row.querySelector('input[name="moved_to_log_work"]').value = "1";
+
+                // Convert string to base64 format to transfer data via URL
+                var logWorkDataB64 = btoa(JSON.stringify(logWorkData));
+                
+                // Redirect to Log Work with the data
+                window.location.href = "{{ url_for('index') }}" + "?logWorkData=" + logWorkDataB64;
+
+                // Send an asynchronous request to update the database
+                if (entryId !== "new") {
+                    fetch('{{ url_for("move_entry") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ entry_id: entryId })
+                    });
+                }
+            });
+        }
+
+        document.querySelectorAll('#schedule-body tr').forEach(initializeRowEvents);
+
+        document.getElementById('add-row').addEventListener('click', function () {
+            var tableBody = document.getElementById('schedule-body');
+            var newRow = document.createElement('tr');
+            var lastRowEndTime = document.querySelector('#schedule-body tr:last-child .end-time').value;
+
+            newRow.innerHTML = `
+                <input type="hidden" name="moved_to_log_work" value="0">
+                <td><input type="time" name="start_time" value="${lastRowEndTime}" class="form-control start-time"></td>
+                <td><input type="time" name="end_time" class="form-control end-time"></td>
+                <td><textarea name="activity" class="form-control auto-expand"></textarea></td>
+                <td><input type="text" name="link" class="form-control"></td>
+                <td>
+                    <select name="category" class="form-control">
+                        <option value="Meetings">Meetings</option>
+                        <option value="Work">Work</option>
+                        <option value="Learning">Learning</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                    </select>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-secondary btn-sm move-up">↑</button>
+                    <button type="button" class="btn btn-secondary btn-sm move-down">↓</button>
+                    <button type="button" class="btn btn-success btn-sm add-row">Add</button>
+                    <button type="button" class="btn btn-danger btn-sm delete-row">Delete</button>
+                    <button type="button" class="btn btn-info btn-sm move-to-log-work">Move to Log Work</button>
+                </td>
+            `;
+
+            tableBody.appendChild(newRow);
+            initializeRowEvents(newRow);
+        });
+    });
+</script>
+{% endblock %}

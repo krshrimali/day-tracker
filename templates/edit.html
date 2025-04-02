@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>Edit Work Entry</h1>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('edit', id=task['id']) }}">
+            <div class="form-group">
+                <label for="task">What did you work on?</label>
+                <textarea id="task" name="task" class="form-control" rows="3" required>{{ task['task'] }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="ticket_link">Request Link</label>
+                <input id="ticket_link" name="ticket_link" type="text" class="form-control" value="{{ task['ticket_link'] }}">
+            </div>
+            <div class="form-group">
+                <label for="time_spent">Time Spent (hours)</label>
+                <input id="time_spent" name="time_spent" type="number" step="0.01" class="form-control" value="{{ task['time_spent'] }}" required>
+            </div>
+            <div class="form-group">
+                <label for="comments">Comments</label>
+                <textarea id="comments" name="comments" class="form-control" rows="3">{{ task['comments'] }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" name="category" class="form-control">
+                    <option value="Meetings" {% if task['category'] == 'Meetings' %}selected{% endif %}>Meetings</option>
+                    <option value="Work" {% if task['category'] == 'Work' %}selected{% endif %}>Work</option>
+                    <option value="Learning" {% if task['category'] == 'Learning' %}selected{% endif %}>Learning</option>
+                    <option value="Miscellaneous" {% if task['category'] == 'Miscellaneous' %}selected{% endif %}>Miscellaneous</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+        <a href="{{ url_for('summary') }}" class="btn btn-link">Back to Summary</a>
+    </div>
+</div>
+{% endblock %}

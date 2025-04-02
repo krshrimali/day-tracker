@@ -1,0 +1,36 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container-fluid {
+    padding: 0 30px;
+}
+
+#pieChart, #timeChart {
+    max-width: 800px;
+    max-height: 400px;
+    margin: auto;
+}
+
+.card-body .btn-block {
+    margin-top: 1em !important;
+}
+
+.form-row {
+    margin-bottom: 1em;
+}
+
+.btn-group {
+    display: flex;
+}
+
+.auto-expand {
+    overflow: hidden;
+    resize: none;
+    min-height: 38px; 
+}
+
+.table .form-control {
+    width: auto;
+    margin: 0;
+}
